@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.2.2 - 2026-05-30
+
+- Add `Use Workspace` chat toggle to attach active file and project context to normal chat prompts.
+- Update system prompt so AI uses attached local workspace context instead of claiming it cannot read the project.
+
 ## 0.2.1 - 2026-05-30
 
 - Add VSIX extension icon from `icon.png`.

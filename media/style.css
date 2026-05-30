@@ -170,6 +170,21 @@ button:disabled {
   background: var(--vscode-sideBar-background);
 }
 
+.workspace-toggle {
+  grid-column: 1 / -1;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  width: fit-content;
+  color: var(--vscode-descriptionForeground);
+  font-size: 12px;
+  user-select: none;
+}
+
+.workspace-toggle input {
+  margin: 0;
+}
+
 textarea {
   width: 100%;
   min-height: 64px;

@@ -1,10 +1,11 @@
 import * as vscode from 'vscode';
+import { getActiveFileText, getProjectContext } from './contextReader';
 import { getApiKey } from './secrets';
 import { getSettings } from './settings';
 import { YouClient } from './youClient';
 
 type WebviewMessage =
-  | { type: 'sendMessage'; text: string }
+  | { type: 'sendMessage'; text: string; includeWorkspace?: boolean }
   | { type: 'clearChat' }
   | { type: 'insertAnswer'; text: string }
   | { type: 'replaceSelection'; text: string }
@@ -65,13 +66,13 @@ export class ChatPanel {
     );
   }
 
-  public async submitPrompt(prompt: string, visibleQuestion?: string): Promise<void> {
+  public async submitPrompt(prompt: string, visibleQuestion?: string, includeWorkspace = false): Promise<void> {
     this.panel.webview.postMessage({
       type: 'userMessage',
       text: visibleQuestion ?? prompt
     });
 
-    await this.requestAnswer(prompt);
+    await this.requestAnswer(prompt, includeWorkspace);
   }
 
   public clear(): void {
@@ -95,7 +96,7 @@ export class ChatPanel {
     }
 
     if (message.type === 'sendMessage') {
-      await this.submitPrompt(message.text);
+      await this.submitPrompt(message.text, undefined, Boolean(message.includeWorkspace));
       return;
     }
 
@@ -114,7 +115,7 @@ export class ChatPanel {
     }
   }
 
-  private async requestAnswer(prompt: string): Promise<void> {
+  private async requestAnswer(prompt: string, includeWorkspace: boolean): Promise<void> {
     const settings = getSettings();
     const apiKey = await getApiKey(this.context);
 
@@ -126,19 +127,27 @@ export class ChatPanel {
       return;
     }
 
+    this.panel.webview.postMessage({ type: 'loading', value: true });
+
+    const workspaceContext = includeWorkspace
+      ? await buildWorkspaceContext(settings.maxContextChars, settings.projectMaxFiles)
+      : '';
+
     const localizedPrompt = [
       settings.language === 'id'
         ? 'Kamu adalah AI assistant untuk developer di VS Code. Jawab dengan jelas, praktis, dan langsung ke inti dalam bahasa Indonesia.'
         : 'You are an AI assistant for developers in VS Code. Answer clearly, practically, and directly in English.',
+      includeWorkspace
+        ? 'Kamu menerima konteks workspace lokal dari extension VS Code. Gunakan konteks itu sebagai sumber utama. Jangan mengatakan bahwa kamu tidak bisa membaca proyek lokal jika konteks workspace sudah dilampirkan.'
+        : 'Jika konteks workspace tidak dilampirkan, jangan mengklaim sudah membaca file lokal.',
       settings.enableWebSearch
         ? 'Gunakan kemampuan research/web intelligence jika relevan.'
         : 'Fokus pada konteks yang diberikan user.',
+      workspaceContext,
       '',
       'Pertanyaan user:',
       prompt
     ].join('\n');
-
-    this.panel.webview.postMessage({ type: 'loading', value: true });
 
     try {
       const client = new YouClient({ apiKey });
@@ -183,6 +192,10 @@ export class ChatPanel {
   <div id="loading" class="loading" hidden>AI sedang menjawab...</div>
 
   <form id="composer" class="composer">
+    <label class="workspace-toggle" title="Lampirkan snapshot workspace lokal ke prompt berikutnya">
+      <input id="workspaceToggle" type="checkbox">
+      <span>Use Workspace</span>
+    </label>
     <textarea id="prompt" rows="3" placeholder="Tulis pertanyaan..." aria-label="Tulis pertanyaan"></textarea>
     <button id="sendButton" type="submit">Send</button>
   </form>
@@ -191,6 +204,56 @@ export class ChatPanel {
 </body>
 </html>`;
   }
+}
+
+async function buildWorkspaceContext(maxChars: number, maxFiles: number): Promise<string> {
+  const activeFile = getActiveFileText(Math.min(maxChars, 8000));
+  const project = await getProjectContext(maxChars, maxFiles);
+
+  if (!activeFile && (!project || project.files.length === 0)) {
+    return '\nKonteks workspace: tidak ada workspace atau file aktif yang bisa dibaca.\n';
+  }
+
+  const sections: string[] = [
+    '',
+    'Konteks workspace lokal dari VS Code extension:',
+    'Catatan privasi: konteks ini hanya dilampirkan karena user mengaktifkan Use Workspace atau menjalankan command eksplisit.'
+  ];
+
+  if (activeFile) {
+    sections.push(
+      '',
+      `File aktif: ${activeFile.fileName}`,
+      `Bahasa file aktif: ${activeFile.languageId}`,
+      activeFile.truncated ? `Catatan: file aktif dipotong sampai ${Math.min(maxChars, 8000)} karakter.` : '',
+      'Isi file aktif:',
+      '```',
+      activeFile.text,
+      '```'
+    );
+  }
+
+  if (project && project.files.length > 0) {
+    sections.push(
+      '',
+      `Nama workspace: ${project.rootName}`,
+      project.truncated ? `Catatan: snapshot proyek dipotong. Maksimum ${maxFiles} file dan ${maxChars} karakter.` : '',
+      'Snapshot file proyek:'
+    );
+
+    for (const file of project.files) {
+      sections.push(
+        '',
+        `File: ${file.path}`,
+        file.truncated ? 'Catatan: file ini dipotong.' : '',
+        '```',
+        file.text,
+        '```'
+      );
+    }
+  }
+
+  return sections.filter((line) => line !== '').join('\n');
 }
 
 async function insertAtCursor(text: string): Promise<void> {

@@ -7,12 +7,15 @@
   const clearButton = document.getElementById('clearButton');
   const loading = document.getElementById('loading');
   const initialState = document.getElementById('initialState');
+  const workspaceToggle = document.getElementById('workspaceToggle');
 
   const state = {
-    messages: []
+    messages: [],
+    includeWorkspace: false
   };
 
   restoreState();
+  workspaceToggle.checked = state.includeWorkspace;
   render();
 
   form.addEventListener('submit', function (event) {
@@ -32,6 +35,11 @@
     persistState();
     render();
     vscode.postMessage({ type: 'clearChat' });
+  });
+
+  workspaceToggle.addEventListener('change', function () {
+    state.includeWorkspace = workspaceToggle.checked;
+    persistState();
   });
 
   window.addEventListener('message', function (event) {
@@ -68,7 +76,11 @@
     }
 
     promptInput.value = '';
-    vscode.postMessage({ type: 'sendMessage', text });
+    vscode.postMessage({
+      type: 'sendMessage',
+      text,
+      includeWorkspace: state.includeWorkspace
+    });
   }
 
   function addMessage(role, text) {
@@ -133,6 +145,7 @@
     const previous = vscode.getState();
     if (previous && Array.isArray(previous.messages)) {
       state.messages = previous.messages;
+      state.includeWorkspace = Boolean(previous.includeWorkspace);
       return;
     }
 
@@ -149,7 +162,10 @@
   }
 
   function persistState() {
-    vscode.setState({ messages: state.messages });
+    vscode.setState({
+      messages: state.messages,
+      includeWorkspace: state.includeWorkspace
+    });
     vscode.postMessage({ type: 'historyChanged', messages: state.messages });
   }
 

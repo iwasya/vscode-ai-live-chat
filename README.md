@@ -28,6 +28,7 @@ vscode-extension, ai-chat, you-com-api, coding-assistant, bug-checker, typescrip
 - Jelaskan error/warning dari Problems: `You Chat: Explain Problems`
 - Analisis proyek dan saran perbaikan: `You Chat: Analyze Project and Suggest Improvements`
 - Clear chat, copy jawaban AI, insert jawaban ke editor, dan replace selection dari jawaban AI
+- Toggle `Use Workspace` di chat untuk melampirkan konteks file aktif dan snapshot proyek ke pertanyaan biasa
 
 ## Menjalankan Lokal
 
@@ -54,6 +55,8 @@ code --install-extension you-live-chat-vscode-0.2.0.vsix
 ## Analisis Proyek
 
 Command `You Chat: Analyze Project and Suggest Improvements` membaca file kode dari workspace aktif, mengabaikan folder seperti `node_modules`, `out`, `dist`, `build`, dan `.git`, lalu mengirim snapshot ringkas ke You.com API.
+
+Di panel chat, aktifkan `Use Workspace` agar pertanyaan biasa juga membawa konteks workspace lokal. Extension membaca file melalui VS Code API, lalu melampirkan snapshot terbatas sesuai setting di bawah.
 
 Setting yang bisa diatur:
 
