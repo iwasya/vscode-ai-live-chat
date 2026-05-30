@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.2.4 - 2026-05-30
+
+- Move chat UI into a dedicated Activity Bar sidebar view.
+- Update extension publisher metadata from `local-dev` to `R4ten99`.
+
 ## 0.2.3 - 2026-05-30
 
 - Fix chat layout so the prompt composer stays fixed at the bottom.

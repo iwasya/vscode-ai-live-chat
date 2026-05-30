@@ -6,8 +6,8 @@ import { ChatPanel } from './webview';
 
 export function registerCommands(context: vscode.ExtensionContext): void {
   context.subscriptions.push(
-    vscode.commands.registerCommand('youLiveChat.openChat', () => {
-      ChatPanel.createOrShow(context);
+    vscode.commands.registerCommand('youLiveChat.openChat', async () => {
+      await ChatPanel.createOrShow(context);
     }),
     vscode.commands.registerCommand('youLiveChat.setApiKey', async () => {
       await setApiKey(context);
@@ -37,7 +37,8 @@ export function registerCommands(context: vscode.ExtensionContext): void {
         '```'
       ].join('\n');
 
-      await ChatPanel.createOrShow(context).submitPrompt(prompt, 'Analisis kode yang dipilih');
+      const chat = await ChatPanel.createOrShow(context);
+      await chat.submitPrompt(prompt, 'Analisis kode yang dipilih');
     }),
     vscode.commands.registerCommand('youLiveChat.explainFile', async () => {
       const settings = getSettings();
@@ -60,7 +61,8 @@ export function registerCommands(context: vscode.ExtensionContext): void {
         '```'
       ].filter(Boolean).join('\n');
 
-      await ChatPanel.createOrShow(context).submitPrompt(prompt, 'Jelaskan file aktif');
+      const chat = await ChatPanel.createOrShow(context);
+      await chat.submitPrompt(prompt, 'Jelaskan file aktif');
     }),
     vscode.commands.registerCommand('youLiveChat.fixSelection', async () => {
       const selected = getSelectedText();
@@ -83,7 +85,8 @@ export function registerCommands(context: vscode.ExtensionContext): void {
         '```'
       ].join('\n');
 
-      await ChatPanel.createOrShow(context).submitPrompt(prompt, 'Perbaiki kode yang dipilih');
+      const chat = await ChatPanel.createOrShow(context);
+      await chat.submitPrompt(prompt, 'Perbaiki kode yang dipilih');
     }),
     vscode.commands.registerCommand('youLiveChat.checkBugs', async () => {
       const settings = getSettings();
@@ -116,7 +119,8 @@ export function registerCommands(context: vscode.ExtensionContext): void {
         '```'
       ].filter(Boolean).join('\n');
 
-      await ChatPanel.createOrShow(context).submitPrompt(prompt, selected ? 'Cek bug kode yang dipilih' : 'Cek bug file aktif');
+      const chat = await ChatPanel.createOrShow(context);
+      await chat.submitPrompt(prompt, selected ? 'Cek bug kode yang dipilih' : 'Cek bug file aktif');
     }),
     vscode.commands.registerCommand('youLiveChat.explainProblems', async () => {
       const diagnostics = collectDiagnostics();
@@ -132,7 +136,8 @@ export function registerCommands(context: vscode.ExtensionContext): void {
         diagnostics
       ].join('\n');
 
-      await ChatPanel.createOrShow(context).submitPrompt(prompt, 'Jelaskan Problems VS Code');
+      const chat = await ChatPanel.createOrShow(context);
+      await chat.submitPrompt(prompt, 'Jelaskan Problems VS Code');
     }),
     vscode.commands.registerCommand('youLiveChat.analyzeProject', async () => {
       const settings = getSettings();
@@ -174,7 +179,8 @@ export function registerCommands(context: vscode.ExtensionContext): void {
         projectSnapshot
       ].filter(Boolean).join('\n');
 
-      await ChatPanel.createOrShow(context).submitPrompt(prompt, 'Analisis proyek dan saran perbaikan');
+      const chat = await ChatPanel.createOrShow(context);
+      await chat.submitPrompt(prompt, 'Analisis proyek dan saran perbaikan');
     }),
     vscode.commands.registerCommand('youLiveChat.clearChat', () => {
       ChatPanel.currentPanel?.clear();

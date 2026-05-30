@@ -2,8 +2,8 @@
   "name": "you-live-chat-vscode",
   "displayName": "You Live Chat",
   "description": "Live chat AI ringan di VS Code menggunakan You.com API.",
-  "version": "0.2.3",
-  "publisher": "local-dev",
+  "version": "0.2.4",
+  "publisher": "R4ten99",
   "icon": "assets/icon.png",
   "license": "MIT",
   "repository": {
@@ -30,6 +30,7 @@
     "Other"
   ],
   "activationEvents": [
+    "onView:youLiveChat.chatView",
     "onCommand:youLiveChat.openChat",
     "onCommand:youLiveChat.setApiKey",
     "onCommand:youLiveChat.clearApiKey",
@@ -43,6 +44,24 @@
   ],
   "main": "./out/extension.js",
   "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "youLiveChat",
+          "title": "You Live Chat",
+          "icon": "assets/icon.png"
+        }
+      ]
+    },
+    "views": {
+      "youLiveChat": [
+        {
+          "type": "webview",
+          "id": "youLiveChat.chatView",
+          "name": "Chat"
+        }
+      ]
+    },
     "commands": [
       {
         "command": "youLiveChat.openChat",

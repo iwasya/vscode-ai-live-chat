@@ -19,55 +19,57 @@ type ChatMessage = {
 
 const historyKey = 'youLiveChat.chatHistory';
 
-export class ChatPanel {
+export class ChatPanel implements vscode.WebviewViewProvider {
+  public static readonly viewType = 'youLiveChat.chatView';
   public static currentPanel: ChatPanel | undefined;
 
-  private readonly panel: vscode.WebviewPanel;
-  private readonly context: vscode.ExtensionContext;
-  private readonly extensionUri: vscode.Uri;
-  private disposables: vscode.Disposable[] = [];
+  private view: vscode.WebviewView | undefined;
+  private waiters: Array<() => void> = [];
 
-  public static createOrShow(context: vscode.ExtensionContext): ChatPanel {
-    const column = vscode.window.activeTextEditor?.viewColumn ?? vscode.ViewColumn.One;
+  public static register(context: vscode.ExtensionContext): ChatPanel {
+    const provider = new ChatPanel(context);
+    ChatPanel.currentPanel = provider;
 
-    if (ChatPanel.currentPanel) {
-      ChatPanel.currentPanel.panel.reveal(column);
-      return ChatPanel.currentPanel;
-    }
-
-    const panel = vscode.window.createWebviewPanel(
-      'youLiveChat',
-      'You Live Chat',
-      vscode.ViewColumn.Beside,
-      {
-        enableScripts: true,
-        retainContextWhenHidden: true,
-        localResourceRoots: [
-          vscode.Uri.joinPath(context.extensionUri, 'media')
-        ]
-      }
+    context.subscriptions.push(
+      vscode.window.registerWebviewViewProvider(ChatPanel.viewType, provider, {
+        webviewOptions: {
+          retainContextWhenHidden: true
+        }
+      })
     );
 
-    ChatPanel.currentPanel = new ChatPanel(panel, context);
-    return ChatPanel.currentPanel;
+    return provider;
   }
 
-  private constructor(panel: vscode.WebviewPanel, context: vscode.ExtensionContext) {
-    this.panel = panel;
-    this.context = context;
-    this.extensionUri = context.extensionUri;
+  public static async createOrShow(context: vscode.ExtensionContext): Promise<ChatPanel> {
+    const provider = ChatPanel.currentPanel ?? ChatPanel.register(context);
+    await vscode.commands.executeCommand('workbench.view.extension.youLiveChat');
+    await provider.waitForView();
+    return provider;
+  }
 
-    this.panel.webview.html = this.getHtml();
-    this.panel.onDidDispose(() => this.dispose(), null, this.disposables);
-    this.panel.webview.onDidReceiveMessage(
-      (message: WebviewMessage) => this.handleMessage(message),
-      null,
-      this.disposables
-    );
+  private constructor(private readonly context: vscode.ExtensionContext) {}
+
+  public resolveWebviewView(webviewView: vscode.WebviewView): void {
+    this.view = webviewView;
+    webviewView.webview.options = {
+      enableScripts: true,
+      localResourceRoots: [
+        vscode.Uri.joinPath(this.context.extensionUri, 'media')
+      ]
+    };
+
+    webviewView.webview.html = this.getHtml(webviewView.webview);
+    webviewView.webview.onDidReceiveMessage((message: WebviewMessage) => {
+      void this.handleMessage(message);
+    });
+
+    this.waiters.splice(0).forEach((resolve) => resolve());
   }
 
   public async submitPrompt(prompt: string, visibleQuestion?: string, includeWorkspace = false): Promise<void> {
-    this.panel.webview.postMessage({
+    await this.waitForView();
+    this.postMessage({
       type: 'userMessage',
       text: visibleQuestion ?? prompt
     });
@@ -76,17 +78,22 @@ export class ChatPanel {
   }
 
   public clear(): void {
-    this.panel.webview.postMessage({ type: 'clearChat' });
+    this.postMessage({ type: 'clearChat' });
     void this.context.workspaceState.update(historyKey, []);
   }
 
-  public dispose(): void {
-    ChatPanel.currentPanel = undefined;
-
-    while (this.disposables.length) {
-      const disposable = this.disposables.pop();
-      disposable?.dispose();
+  private async waitForView(): Promise<void> {
+    if (this.view) {
+      return;
     }
+
+    await new Promise<void>((resolve) => {
+      this.waiters.push(resolve);
+    });
+  }
+
+  private postMessage(message: unknown): void {
+    void this.view?.webview.postMessage(message);
   }
 
   private async handleMessage(message: WebviewMessage): Promise<void> {
@@ -120,14 +127,14 @@ export class ChatPanel {
     const apiKey = await getApiKey(this.context);
 
     if (!apiKey) {
-      this.panel.webview.postMessage({
+      this.postMessage({
         type: 'error',
         text: 'API key You.com belum diatur. Jalankan command "You Chat: Set API Key".'
       });
       return;
     }
 
-    this.panel.webview.postMessage({ type: 'loading', value: true });
+    this.postMessage({ type: 'loading', value: true });
 
     const workspaceContext = includeWorkspace
       ? await buildWorkspaceContext(settings.maxContextChars, settings.projectMaxFiles)
@@ -152,19 +159,18 @@ export class ChatPanel {
     try {
       const client = new YouClient({ apiKey });
       const answer = await client.research(localizedPrompt);
-      this.panel.webview.postMessage({ type: 'assistantMessage', text: answer });
+      this.postMessage({ type: 'assistantMessage', text: answer });
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Terjadi error yang tidak diketahui.';
-      this.panel.webview.postMessage({ type: 'error', text: message });
+      this.postMessage({ type: 'error', text: message });
     } finally {
-      this.panel.webview.postMessage({ type: 'loading', value: false });
+      this.postMessage({ type: 'loading', value: false });
     }
   }
 
-  private getHtml(): string {
-    const webview = this.panel.webview;
-    const scriptUri = webview.asWebviewUri(vscode.Uri.joinPath(this.extensionUri, 'media', 'main.js'));
-    const styleUri = webview.asWebviewUri(vscode.Uri.joinPath(this.extensionUri, 'media', 'style.css'));
+  private getHtml(webview: vscode.Webview): string {
+    const scriptUri = webview.asWebviewUri(vscode.Uri.joinPath(this.context.extensionUri, 'media', 'main.js'));
+    const styleUri = webview.asWebviewUri(vscode.Uri.joinPath(this.context.extensionUri, 'media', 'style.css'));
     const nonce = getNonce();
     const savedHistory = escapeAttribute(JSON.stringify(this.context.workspaceState.get<ChatMessage[]>(historyKey, [])));
 
