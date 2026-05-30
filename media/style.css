@@ -191,6 +191,54 @@ button:disabled {
   margin: 0;
 }
 
+.slash-menu {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  max-height: 220px;
+  overflow-y: auto;
+  border: 1px solid var(--vscode-dropdown-border, var(--vscode-panel-border));
+  border-radius: 6px;
+  background: var(--vscode-dropdown-background, var(--vscode-editorWidget-background));
+  box-shadow: 0 4px 12px var(--vscode-widget-shadow, rgba(0, 0, 0, 0.25));
+}
+
+.slash-menu[hidden] {
+  display: none;
+}
+
+.slash-item {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 10px;
+  width: 100%;
+  padding: 7px 9px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--vscode-dropdown-foreground, var(--vscode-editor-foreground));
+  text-align: left;
+}
+
+.slash-item:hover,
+.slash-item.active {
+  background: var(--vscode-list-hoverBackground);
+}
+
+.slash-command {
+  color: var(--vscode-textLink-foreground);
+  font-family: var(--vscode-editor-font-family);
+  font-weight: 700;
+}
+
+.slash-detail {
+  min-width: 0;
+  color: var(--vscode-descriptionForeground);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 textarea {
   width: 100%;
   height: 74px;

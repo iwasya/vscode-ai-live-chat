@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.2.6 - 2026-05-30
+
+- Add slash command autocomplete menu when typing `/` in the chat input.
+- Support keyboard navigation with arrow keys, Enter, Tab, and Escape.
+
 ## 0.2.5 - 2026-05-30
 
 - Add chat input slash commands: `/you`, `/ask`, `/fix`, `/bugs`, `/file`, `/project`, `/problems`, `/key`, and `/clear`.

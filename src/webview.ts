@@ -308,6 +308,7 @@ export class ChatPanel implements vscode.WebviewViewProvider {
       <input id="workspaceToggle" type="checkbox">
       <span>Use Workspace</span>
     </label>
+    <div id="slashMenu" class="slash-menu" hidden></div>
     <textarea id="prompt" rows="3" placeholder="Tulis pertanyaan atau /you untuk command..." aria-label="Tulis pertanyaan"></textarea>
     <button id="sendButton" type="submit">Send</button>
   </form>

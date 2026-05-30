@@ -8,6 +8,22 @@
   const loading = document.getElementById('loading');
   const initialState = document.getElementById('initialState');
   const workspaceToggle = document.getElementById('workspaceToggle');
+  const slashMenu = document.getElementById('slashMenu');
+
+  const slashCommands = [
+    { command: '/you', detail: 'Tampilkan bantuan slash command' },
+    { command: '/ask', detail: 'Tanya berdasarkan selection atau file aktif' },
+    { command: '/fix', detail: 'Perbaiki selection atau file aktif' },
+    { command: '/bugs', detail: 'Cek bug selection atau file aktif' },
+    { command: '/file', detail: 'Baca dan jelaskan file aktif' },
+    { command: '/project', detail: 'Analisis proyek dan saran perbaikan' },
+    { command: '/problems', detail: 'Jelaskan error/warning dari Problems' },
+    { command: '/key', detail: 'Simpan API key You.com' },
+    { command: '/clear', detail: 'Hapus chat saat ini' },
+    { command: '/help', detail: 'Tampilkan bantuan slash command' }
+  ];
+
+  let activeSlashIndex = 0;
 
   const state = {
     messages: [],
@@ -24,10 +40,44 @@
   });
 
   promptInput.addEventListener('keydown', function (event) {
+    if (isSlashMenuVisible()) {
+      if (event.key === 'ArrowDown') {
+        event.preventDefault();
+        moveSlashSelection(1);
+        return;
+      }
+
+      if (event.key === 'ArrowUp') {
+        event.preventDefault();
+        moveSlashSelection(-1);
+        return;
+      }
+
+      if (event.key === 'Tab' || event.key === 'Enter') {
+        event.preventDefault();
+        applyActiveSlashCommand();
+        return;
+      }
+
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        hideSlashMenu();
+        return;
+      }
+    }
+
     if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') {
       event.preventDefault();
       sendPrompt();
     }
+  });
+
+  promptInput.addEventListener('input', function () {
+    updateSlashMenu();
+  });
+
+  promptInput.addEventListener('blur', function () {
+    setTimeout(hideSlashMenu, 120);
   });
 
   clearButton.addEventListener('click', function () {
@@ -76,6 +126,7 @@
     }
 
     promptInput.value = '';
+    hideSlashMenu();
     vscode.postMessage({
       type: 'sendMessage',
       text,
@@ -127,6 +178,93 @@
     }
 
     chat.scrollTop = chat.scrollHeight;
+  }
+
+  function updateSlashMenu() {
+    const query = promptInput.value.trimStart();
+
+    if (!query.startsWith('/') || query.includes(' ')) {
+      hideSlashMenu();
+      return;
+    }
+
+    const matches = slashCommands.filter(function (item) {
+      return item.command.startsWith(query.toLowerCase());
+    });
+
+    if (matches.length === 0) {
+      hideSlashMenu();
+      return;
+    }
+
+    activeSlashIndex = Math.min(activeSlashIndex, matches.length - 1);
+    renderSlashMenu(matches);
+  }
+
+  function renderSlashMenu(items) {
+    slashMenu.innerHTML = '';
+    slashMenu.hidden = false;
+    slashMenu.dataset.count = String(items.length);
+
+    items.forEach(function (item, index) {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'slash-item' + (index === activeSlashIndex ? ' active' : '');
+      button.dataset.command = item.command;
+
+      const command = document.createElement('span');
+      command.className = 'slash-command';
+      command.textContent = item.command;
+
+      const detail = document.createElement('span');
+      detail.className = 'slash-detail';
+      detail.textContent = item.detail;
+
+      button.appendChild(command);
+      button.appendChild(detail);
+      button.addEventListener('mousedown', function (event) {
+        event.preventDefault();
+        applySlashCommand(item.command);
+      });
+
+      slashMenu.appendChild(button);
+    });
+  }
+
+  function moveSlashSelection(direction) {
+    const count = Number(slashMenu.dataset.count || 0);
+    if (!count) {
+      return;
+    }
+
+    activeSlashIndex = (activeSlashIndex + direction + count) % count;
+    updateSlashMenu();
+  }
+
+  function applyActiveSlashCommand() {
+    const active = slashMenu.querySelector('.slash-item.active');
+    if (active instanceof HTMLButtonElement && active.dataset.command) {
+      applySlashCommand(active.dataset.command);
+    }
+  }
+
+  function applySlashCommand(command) {
+    promptInput.value = command + (command === '/project' || command === '/problems' || command === '/key' || command === '/clear' || command === '/you' || command === '/help' ? '' : ' ');
+    promptInput.focus();
+    promptInput.selectionStart = promptInput.value.length;
+    promptInput.selectionEnd = promptInput.value.length;
+    hideSlashMenu();
+  }
+
+  function hideSlashMenu() {
+    slashMenu.hidden = true;
+    slashMenu.innerHTML = '';
+    slashMenu.dataset.count = '0';
+    activeSlashIndex = 0;
+  }
+
+  function isSlashMenuVisible() {
+    return !slashMenu.hidden;
   }
 
   function roleLabel(role) {

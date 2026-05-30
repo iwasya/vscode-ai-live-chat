@@ -30,6 +30,7 @@ vscode-extension, ai-chat, you-com-api, coding-assistant, bug-checker, typescrip
 - Clear chat, copy jawaban AI, insert jawaban ke editor, dan replace selection dari jawaban AI
 - Toggle `Use Workspace` di chat untuk melampirkan konteks file aktif dan snapshot proyek ke pertanyaan biasa
 - Slash command langsung dari input chat: `/you`, `/ask`, `/fix`, `/bugs`, `/file`, `/project`, `/problems`, `/key`, `/clear`
+- Ketik `/` di input chat untuk melihat autocomplete command
 
 ## Slash Commands
 
