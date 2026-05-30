@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.2.5 - 2026-05-30
+
+- Add chat input slash commands: `/you`, `/ask`, `/fix`, `/bugs`, `/file`, `/project`, `/problems`, `/key`, and `/clear`.
+- Add slash command help text and examples.
+
 ## 0.2.4 - 2026-05-30
 
 - Move chat UI into a dedicated Activity Bar sidebar view.

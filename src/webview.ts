@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { getActiveFileText, getProjectContext } from './contextReader';
+import { getActiveFileText, getProjectContext, getSelectedText } from './contextReader';
 import { getApiKey } from './secrets';
 import { getSettings } from './settings';
 import { YouClient } from './youClient';
@@ -103,7 +103,7 @@ export class ChatPanel implements vscode.WebviewViewProvider {
     }
 
     if (message.type === 'sendMessage') {
-      await this.submitPrompt(message.text, undefined, Boolean(message.includeWorkspace));
+      await this.handleChatInput(message.text, Boolean(message.includeWorkspace));
       return;
     }
 
@@ -168,6 +168,112 @@ export class ChatPanel implements vscode.WebviewViewProvider {
     }
   }
 
+  private async handleChatInput(text: string, includeWorkspace: boolean): Promise<void> {
+    const trimmed = text.trim();
+    if (!trimmed.startsWith('/')) {
+      await this.submitPrompt(trimmed, undefined, includeWorkspace);
+      return;
+    }
+
+    const [rawCommand, ...rest] = trimmed.split(/\s+/);
+    const command = rawCommand.toLowerCase();
+    const argument = rest.join(' ').trim();
+
+    if (command === '/help' || command === '/you') {
+      this.postLocalAssistant(getSlashHelp());
+      return;
+    }
+
+    if (command === '/clear') {
+      this.clear();
+      return;
+    }
+
+    if (command === '/key') {
+      await vscode.commands.executeCommand('youLiveChat.setApiKey');
+      this.postLocalAssistant('API key flow dibuka. Setelah selesai, kamu bisa lanjut chat dari sini.');
+      return;
+    }
+
+    if (command === '/project') {
+      await vscode.commands.executeCommand('youLiveChat.analyzeProject');
+      return;
+    }
+
+    if (command === '/problems') {
+      await vscode.commands.executeCommand('youLiveChat.explainProblems');
+      return;
+    }
+
+    if (command === '/file') {
+      await this.submitFilePrompt(argument);
+      return;
+    }
+
+    if (command === '/ask') {
+      await this.submitSelectionPrompt(argument, 'ask');
+      return;
+    }
+
+    if (command === '/fix') {
+      await this.submitSelectionPrompt(argument, 'fix');
+      return;
+    }
+
+    if (command === '/bugs') {
+      await this.submitSelectionPrompt(argument, 'bugs');
+      return;
+    }
+
+    this.postLocalError(`Slash command "${rawCommand}" belum dikenal. Ketik /you untuk melihat daftar command.`);
+  }
+
+  private async submitFilePrompt(argument: string): Promise<void> {
+    const settings = getSettings();
+    const file = getActiveFileText(settings.maxContextChars);
+    if (!file) {
+      this.postLocalError('Tidak ada file aktif untuk dibaca.');
+      return;
+    }
+
+    const prompt = [
+      argument || 'Jelaskan file aktif berikut dalam bahasa Indonesia.',
+      'Berikan ringkasan fungsi, alur penting, potensi masalah, dan saran perbaikan.',
+      file.truncated ? `Catatan: isi file dipotong sampai ${settings.maxContextChars} karakter.` : '',
+      '',
+      `File: ${file.fileName}`,
+      `Bahasa: ${file.languageId}`,
+      'Isi file:',
+      '```',
+      file.text,
+      '```'
+    ].filter(Boolean).join('\n');
+
+    await this.submitPrompt(prompt, argument ? `/file ${argument}` : '/file');
+  }
+
+  private async submitSelectionPrompt(argument: string, mode: 'ask' | 'fix' | 'bugs'): Promise<void> {
+    const settings = getSettings();
+    const selected = getSelectedText();
+    const file = selected ?? getActiveFileText(settings.maxContextChars);
+
+    if (!file) {
+      this.postLocalError('Tidak ada selection atau file aktif yang bisa dipakai.');
+      return;
+    }
+
+    const prompt = buildCodePrompt(mode, file, argument, settings.maxContextChars, Boolean(selected));
+    await this.submitPrompt(prompt, `/${mode} ${argument}`.trim());
+  }
+
+  private postLocalAssistant(text: string): void {
+    this.postMessage({ type: 'assistantMessage', text });
+  }
+
+  private postLocalError(text: string): void {
+    this.postMessage({ type: 'error', text });
+  }
+
   private getHtml(webview: vscode.Webview): string {
     const scriptUri = webview.asWebviewUri(vscode.Uri.joinPath(this.context.extensionUri, 'media', 'main.js'));
     const styleUri = webview.asWebviewUri(vscode.Uri.joinPath(this.context.extensionUri, 'media', 'style.css'));
@@ -202,7 +308,7 @@ export class ChatPanel implements vscode.WebviewViewProvider {
       <input id="workspaceToggle" type="checkbox">
       <span>Use Workspace</span>
     </label>
-    <textarea id="prompt" rows="3" placeholder="Tulis pertanyaan..." aria-label="Tulis pertanyaan"></textarea>
+    <textarea id="prompt" rows="3" placeholder="Tulis pertanyaan atau /you untuk command..." aria-label="Tulis pertanyaan"></textarea>
     <button id="sendButton" type="submit">Send</button>
   </form>
 
@@ -210,6 +316,77 @@ export class ChatPanel implements vscode.WebviewViewProvider {
 </body>
 </html>`;
   }
+}
+
+function buildCodePrompt(
+  mode: 'ask' | 'fix' | 'bugs',
+  file: { fileName: string; languageId: string; text: string; truncated: boolean },
+  argument: string,
+  maxContextChars: number,
+  hasSelection: boolean
+): string {
+  const subject = hasSelection ? 'kode yang dipilih' : 'file aktif';
+  const task = argument || defaultSlashTask(mode, subject);
+  const instructions = {
+    ask: [
+      'Jelaskan kode dengan ringkas dan praktis.',
+      'Berikan fungsi utama, alur kerja, potensi masalah, dan saran perbaikan.'
+    ],
+    fix: [
+      'Perbaiki kode berikut.',
+      'Berikan penyebab masalah, kode yang sudah diperbaiki, dan penjelasan perubahan.'
+    ],
+    bugs: [
+      'Cek bug pada kode berikut.',
+      'Fokus pada bug nyata, edge case, masalah runtime, masalah typing, risiko security, dan logical error.'
+    ]
+  }[mode];
+
+  return [
+    task,
+    ...instructions,
+    file.truncated ? `Catatan: konteks dipotong sampai ${maxContextChars} karakter.` : '',
+    '',
+    `File: ${file.fileName}`,
+    `Bahasa: ${file.languageId}`,
+    'Kode:',
+    '```',
+    file.text,
+    '```'
+  ].filter(Boolean).join('\n');
+}
+
+function defaultSlashTask(mode: 'ask' | 'fix' | 'bugs', subject: string): string {
+  if (mode === 'fix') {
+    return `Perbaiki ${subject} berikut.`;
+  }
+
+  if (mode === 'bugs') {
+    return `Cek bug pada ${subject} berikut.`;
+  }
+
+  return `Jelaskan ${subject} berikut dalam bahasa Indonesia.`;
+}
+
+function getSlashHelp(): string {
+  return [
+    'Slash command yang tersedia:',
+    '',
+    '- `/ask [instruksi]` pakai selection, atau file aktif jika tidak ada selection.',
+    '- `/fix [instruksi]` perbaiki selection/file aktif.',
+    '- `/bugs [instruksi]` cek bug selection/file aktif.',
+    '- `/file [instruksi]` baca dan jelaskan file aktif.',
+    '- `/project` analisis proyek dan beri saran perbaikan.',
+    '- `/problems` jelaskan error/warning dari Problems.',
+    '- `/key` simpan API key You.com.',
+    '- `/clear` hapus chat.',
+    '- `/you` atau `/help` tampilkan bantuan ini.',
+    '',
+    'Contoh:',
+    '`/fix bikin kode ini lebih aman`',
+    '`/bugs cari edge case di function ini`',
+    '`/file jelaskan struktur file ini`'
+  ].join('\n');
 }
 
 async function buildWorkspaceContext(maxChars: number, maxFiles: number): Promise<string> {

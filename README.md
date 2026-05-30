@@ -29,6 +29,21 @@ vscode-extension, ai-chat, you-com-api, coding-assistant, bug-checker, typescrip
 - Analisis proyek dan saran perbaikan: `You Chat: Analyze Project and Suggest Improvements`
 - Clear chat, copy jawaban AI, insert jawaban ke editor, dan replace selection dari jawaban AI
 - Toggle `Use Workspace` di chat untuk melampirkan konteks file aktif dan snapshot proyek ke pertanyaan biasa
+- Slash command langsung dari input chat: `/you`, `/ask`, `/fix`, `/bugs`, `/file`, `/project`, `/problems`, `/key`, `/clear`
+
+## Slash Commands
+
+Ketik command berikut langsung di input chat:
+
+- `/you` atau `/help`: tampilkan daftar command
+- `/ask [instruksi]`: tanya berdasarkan selection, atau file aktif jika tidak ada selection
+- `/fix [instruksi]`: perbaiki selection/file aktif
+- `/bugs [instruksi]`: cek bug selection/file aktif
+- `/file [instruksi]`: baca file aktif
+- `/project`: analisis proyek
+- `/problems`: jelaskan Problems VS Code
+- `/key`: simpan API key
+- `/clear`: hapus chat
 
 ## Menjalankan Lokal
 

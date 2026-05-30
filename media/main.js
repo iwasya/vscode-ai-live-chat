@@ -99,7 +99,7 @@
     if (state.messages.length === 0) {
       const empty = document.createElement('section');
       empty.className = 'empty-state';
-      empty.textContent = 'Mulai chat dengan You.com API langsung dari VS Code.';
+      empty.textContent = 'Mulai chat dengan You.com API langsung dari VS Code. Ketik /you untuk command cepat.';
       chat.appendChild(empty);
       return;
     }
