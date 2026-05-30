@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.2.9 - 2026-05-30
+
+- Add README logo and badges for a more polished GitHub project page.
+
 ## 0.2.8 - 2026-05-30
 
 - Add GitHub Actions workflow for automatic VSIX release uploads when version tags are pushed.

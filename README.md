@@ -1,4 +1,18 @@
-# You Live Chat for VS Code
+<p align="center">
+  <img src="assets/icon.png" alt="You Live Chat logo" width="96" height="96">
+</p>
+
+<h1 align="center">You Live Chat for VS Code</h1>
+
+<p align="center">
+  Live chat AI ringan di VS Code menggunakan You.com API.
+</p>
+
+<p align="center">
+  <img alt="Version" src="https://img.shields.io/badge/version-0.2.8-blue">
+  <img alt="VS Code" src="https://img.shields.io/badge/VS%20Code-%5E1.90-007ACC">
+  <img alt="License" src="https://img.shields.io/badge/license-MIT-green">
+</p>
 
 Extension VS Code untuk live chat AI ringan menggunakan You.com Research API.
 
