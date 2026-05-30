@@ -1,0 +1,11 @@
+# Changelog
+
+## 0.1.0 - 2026-05-30
+
+Initial MVP release.
+
+- Add VS Code webview chat panel.
+- Add You.com Research API integration.
+- Add API key and context settings.
+- Add commands for selected code, active file explanation, bug checking, and project analysis.
+- Add copy answer, clear chat, loading state, and error handling.

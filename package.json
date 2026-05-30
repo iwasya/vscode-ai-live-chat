@@ -4,6 +4,24 @@
   "description": "Live chat AI ringan di VS Code menggunakan You.com API.",
   "version": "0.1.0",
   "publisher": "local-dev",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/iwasya/vscode-ai-live-chat.git"
+  },
+  "homepage": "https://github.com/iwasya/vscode-ai-live-chat#readme",
+  "bugs": {
+    "url": "https://github.com/iwasya/vscode-ai-live-chat/issues"
+  },
+  "keywords": [
+    "vscode",
+    "extension",
+    "ai",
+    "chat",
+    "you.com",
+    "coding-assistant",
+    "bug-checker"
+  ],
   "engines": {
     "vscode": "^1.90.0"
   },

@@ -2,6 +2,20 @@
 
 Extension VS Code untuk live chat AI ringan menggunakan You.com Research API.
 
+## GitHub About
+
+Description:
+
+```text
+VS Code AI live chat extension powered by You.com API, with selected code analysis, bug checking, and project improvement suggestions.
+```
+
+Topics:
+
+```text
+vscode-extension, ai-chat, you-com-api, coding-assistant, bug-checker, typescript
+```
+
 ## Fitur MVP
 
 - Buka panel chat dari Command Palette: `You Chat: Open Chat`
@@ -21,6 +35,20 @@ Extension VS Code untuk live chat AI ringan menggunakan You.com Research API.
 3. Tekan `F5` di VS Code untuk membuka Extension Development Host
 4. Isi setting `youLiveChat.apiKey`
 5. Jalankan command `You Chat: Open Chat`
+
+## Install dari VSIX
+
+Build paket extension:
+
+```bash
+npm run package
+```
+
+Install hasil package:
+
+```bash
+code --install-extension you-live-chat-vscode-0.1.0.vsix
+```
 
 ## Analisis Proyek
 
