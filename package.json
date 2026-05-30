@@ -1,0 +1,138 @@
+{
+  "name": "you-live-chat-vscode",
+  "displayName": "You Live Chat",
+  "description": "Live chat AI ringan di VS Code menggunakan You.com API.",
+  "version": "0.1.0",
+  "publisher": "local-dev",
+  "engines": {
+    "vscode": "^1.90.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onCommand:youLiveChat.openChat",
+    "onCommand:youLiveChat.askSelection",
+    "onCommand:youLiveChat.explainFile",
+    "onCommand:youLiveChat.fixSelection",
+    "onCommand:youLiveChat.checkBugs",
+    "onCommand:youLiveChat.analyzeProject",
+    "onCommand:youLiveChat.clearChat"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "youLiveChat.openChat",
+        "title": "You Chat: Open Chat"
+      },
+      {
+        "command": "youLiveChat.askSelection",
+        "title": "You Chat: Ask Selected Code"
+      },
+      {
+        "command": "youLiveChat.explainFile",
+        "title": "You Chat: Explain Current File"
+      },
+      {
+        "command": "youLiveChat.fixSelection",
+        "title": "You Chat: Fix Selected Code"
+      },
+      {
+        "command": "youLiveChat.checkBugs",
+        "title": "You Chat: Check Code Bugs"
+      },
+      {
+        "command": "youLiveChat.analyzeProject",
+        "title": "You Chat: Analyze Project and Suggest Improvements"
+      },
+      {
+        "command": "youLiveChat.clearChat",
+        "title": "You Chat: Clear Chat"
+      }
+    ],
+    "configuration": {
+      "title": "You Live Chat",
+      "properties": {
+        "youLiveChat.apiKey": {
+          "type": "string",
+          "default": "",
+          "markdownDescription": "API key You.com. Untuk MVP disimpan di VS Code Settings."
+        },
+        "youLiveChat.defaultMode": {
+          "type": "string",
+          "default": "research",
+          "enum": [
+            "research"
+          ],
+          "description": "Mode API default."
+        },
+        "youLiveChat.maxContextChars": {
+          "type": "number",
+          "default": 12000,
+          "minimum": 1000,
+          "maximum": 40000,
+          "description": "Batas karakter konteks yang dikirim ke API."
+        },
+        "youLiveChat.projectMaxFiles": {
+          "type": "number",
+          "default": 25,
+          "minimum": 5,
+          "maximum": 120,
+          "description": "Jumlah maksimum file proyek yang dibaca untuk analisis."
+        },
+        "youLiveChat.language": {
+          "type": "string",
+          "default": "id",
+          "enum": [
+            "id",
+            "en"
+          ],
+          "description": "Bahasa jawaban default."
+        },
+        "youLiveChat.enableWebSearch": {
+          "type": "boolean",
+          "default": true,
+          "description": "Mengaktifkan jawaban berbasis web melalui You.com Research API."
+        }
+      }
+    },
+    "menus": {
+      "editor/context": [
+        {
+          "command": "youLiveChat.askSelection",
+          "when": "editorHasSelection",
+          "group": "navigation@80"
+        },
+        {
+          "command": "youLiveChat.fixSelection",
+          "when": "editorHasSelection",
+          "group": "navigation@81"
+        },
+        {
+          "command": "youLiveChat.checkBugs",
+          "group": "navigation@82"
+        }
+      ]
+    },
+    "keybindings": [
+      {
+        "command": "youLiveChat.openChat",
+        "key": "ctrl+alt+y",
+        "mac": "cmd+alt+y"
+      }
+    ]
+  },
+  "scripts": {
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "vscode:prepublish": "npm run compile",
+    "package": "vsce package"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.8",
+    "@types/vscode": "^1.90.0",
+    "@vscode/vsce": "^3.9.1",
+    "typescript": "^5.5.2"
+  }
+}
