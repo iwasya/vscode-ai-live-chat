@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.2.3 - 2026-05-30
+
+- Fix chat layout so the prompt composer stays fixed at the bottom.
+- Make only the answer/chat area scrollable.
+- Keep prompt textarea height stable with internal scrolling.
+
 ## 0.2.2 - 2026-05-30
 
 - Add `Use Workspace` chat toggle to attach active file and project context to normal chat prompts.
