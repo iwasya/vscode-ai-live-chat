@@ -45,12 +45,6 @@ vscode-extension, ai-chat, you-com-api, coding-assistant, bug-checker, typescrip
 - Toggle `Use Workspace` di chat untuk melampirkan konteks file aktif dan snapshot proyek ke pertanyaan biasa
 - Slash command langsung dari input chat: `/you`, `/ask`, `/fix`, `/bugs`, `/file`, `/project`, `/problems`, `/key`, `/clear`
 - Ketik `/` di input chat untuk melihat autocomplete command
-- Chat sidebar dibuka di sisi kanan agar terasa seperti assistant panel modern.
-
-## Posisi Sidebar
-
-Extension ini memberi default `workbench.sideBar.location` ke `right` dan command `You Chat: Open Chat` akan memindahkan sidebar ke kanan. VS Code belum menyediakan manifest resmi untuk memaksa hanya satu extension view default ke Secondary Sidebar; jika ingin hanya You Live Chat yang ada di kanan, pindahkan view-nya secara manual ke Secondary Sidebar lewat UI VS Code.
-
 ## Slash Commands
 
 Ketik command berikut langsung di input chat:

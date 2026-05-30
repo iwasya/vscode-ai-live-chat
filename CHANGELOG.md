@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.2.12 - 2026-05-30
+
+- Restore normal VS Code sidebar behavior.
+- Stop forcing the primary sidebar to move right when opening chat.
+
 ## 0.2.11 - 2026-05-30
 
 - Send chat input with Enter.
