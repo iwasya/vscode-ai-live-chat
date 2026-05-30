@@ -125,6 +125,7 @@ export class ChatPanel implements vscode.WebviewViewProvider {
   private async requestAnswer(prompt: string, includeWorkspace: boolean): Promise<void> {
     const settings = getSettings();
     const apiKey = await getApiKey(this.context);
+    const shouldAttachWorkspace = includeWorkspace && !isCasualShortInput(prompt);
 
     if (!apiKey) {
       this.postMessage({
@@ -136,15 +137,15 @@ export class ChatPanel implements vscode.WebviewViewProvider {
 
     this.postMessage({ type: 'loading', value: true });
 
-    const workspaceContext = includeWorkspace
+    const workspaceContext = shouldAttachWorkspace
       ? await buildWorkspaceContext(settings.maxContextChars, settings.projectMaxFiles)
       : '';
 
     const localizedPrompt = [
       settings.language === 'id'
-        ? 'Kamu adalah AI assistant untuk developer di VS Code. Jawab dengan jelas, praktis, dan langsung ke inti dalam bahasa Indonesia.'
-        : 'You are an AI assistant for developers in VS Code. Answer clearly, practically, and directly in English.',
-      includeWorkspace
+        ? 'Kamu adalah AI assistant untuk developer di VS Code. Jawab singkat, natural, praktis, dan langsung ke inti dalam bahasa Indonesia. Untuk sapaan atau obrolan ringan, balas 1 kalimat saja. Jangan merangkum workspace kecuali user meminta analisis, penjelasan, bug check, fix, atau review.'
+        : 'You are an AI assistant for developers in VS Code. Answer briefly, naturally, practically, and directly in English. For greetings or casual chat, reply with one sentence only. Do not summarize the workspace unless the user asks for analysis, explanation, bug checking, fixes, or review.',
+      shouldAttachWorkspace
         ? 'Kamu menerima konteks workspace lokal dari extension VS Code. Gunakan konteks itu sebagai sumber utama. Jangan mengatakan bahwa kamu tidak bisa membaca proyek lokal jika konteks workspace sudah dilampirkan.'
         : 'Jika konteks workspace tidak dilampirkan, jangan mengklaim sudah membaca file lokal.',
       settings.enableWebSearch
@@ -355,6 +356,10 @@ function buildCodePrompt(
     file.text,
     '```'
   ].filter(Boolean).join('\n');
+}
+
+function isCasualShortInput(text: string): boolean {
+  return /^(hai|halo|hello|hi|hey|pagi|siang|sore|malam|oke|ok|sip|thanks|makasih|terima kasih)[.!?\s]*$/i.test(text.trim());
 }
 
 function defaultSlashTask(mode: 'ask' | 'fix' | 'bugs', subject: string): string {

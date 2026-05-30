@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.2.10 - 2026-05-30
+
+- Make default chat responses shorter and more natural.
+- Skip workspace context for short casual greetings like "hai" even when `Use Workspace` is enabled.
+
 ## 0.2.9 - 2026-05-30
 
 - Add README logo and badges for a more polished GitHub project page.
