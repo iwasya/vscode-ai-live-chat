@@ -73,6 +73,19 @@ Install hasil package:
 code --install-extension you-live-chat-vscode-0.2.0.vsix
 ```
 
+## Release Otomatis
+
+Repo ini punya GitHub Actions untuk membuat Release otomatis saat tag `vX.Y.Z` dipush.
+
+Contoh release versi patch:
+
+```bash
+npm version patch
+git push origin main --tags
+```
+
+Workflow akan compile, package `.vsix`, membuat GitHub Release, dan meng-upload file `.vsix` sebagai asset release.
+
 ## Analisis Proyek
 
 Command `You Chat: Analyze Project and Suggest Improvements` membaca file kode dari workspace aktif, mengabaikan folder seperti `node_modules`, `out`, `dist`, `build`, dan `.git`, lalu mengirim snapshot ringkas ke You.com API.
