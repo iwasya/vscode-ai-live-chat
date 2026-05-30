@@ -4,5 +4,6 @@ node_modules/**
 src/**
 **/*.map
 .gitignore
+icon.png
 tsconfig.json
 PRD_You_Live_Chat_VSCode_Extension.md

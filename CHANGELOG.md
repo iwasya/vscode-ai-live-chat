@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.2.1 - 2026-05-30
+
+- Add VSIX extension icon from `icon.png`.
+- Use optimized 128x128 icon asset for packaging.
+
 ## 0.2.0 - 2026-05-30
 
 - Add SecretStorage API key command.

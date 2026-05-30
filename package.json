@@ -2,8 +2,9 @@
   "name": "you-live-chat-vscode",
   "displayName": "You Live Chat",
   "description": "Live chat AI ringan di VS Code menggunakan You.com API.",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "publisher": "local-dev",
+  "icon": "assets/icon.png",
   "license": "MIT",
   "repository": {
     "type": "git",
