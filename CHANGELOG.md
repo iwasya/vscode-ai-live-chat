@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.2.0 - 2026-05-30
+
+- Add SecretStorage API key command.
+- Add answer insert and replace selection actions.
+- Add VS Code Problems explanation command.
+- Add persistent chat history via workspace state.
+
 ## 0.1.0 - 2026-05-30
 
 Initial MVP release.

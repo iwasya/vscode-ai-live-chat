@@ -6,6 +6,7 @@
   const sendButton = document.getElementById('sendButton');
   const clearButton = document.getElementById('clearButton');
   const loading = document.getElementById('loading');
+  const initialState = document.getElementById('initialState');
 
   const state = {
     messages: []
@@ -107,18 +108,7 @@
       item.appendChild(body);
 
       if (message.role === 'assistant') {
-        const copy = document.createElement('button');
-        copy.className = 'copy-button';
-        copy.type = 'button';
-        copy.textContent = 'Copy';
-        copy.addEventListener('click', function () {
-          navigator.clipboard.writeText(message.text);
-          copy.textContent = 'Copied';
-          setTimeout(function () {
-            copy.textContent = 'Copy';
-          }, 1200);
-        });
-        item.appendChild(copy);
+        item.appendChild(createAssistantActions(message));
       }
 
       chat.appendChild(item);
@@ -143,11 +133,69 @@
     const previous = vscode.getState();
     if (previous && Array.isArray(previous.messages)) {
       state.messages = previous.messages;
+      return;
+    }
+
+    if (initialState && initialState.dataset.messages) {
+      try {
+        const savedMessages = JSON.parse(initialState.dataset.messages);
+        if (Array.isArray(savedMessages)) {
+          state.messages = savedMessages;
+        }
+      } catch {
+        state.messages = [];
+      }
     }
   }
 
   function persistState() {
     vscode.setState({ messages: state.messages });
+    vscode.postMessage({ type: 'historyChanged', messages: state.messages });
+  }
+
+  function createAssistantActions(message) {
+    const actions = document.createElement('div');
+    actions.className = 'message-actions';
+
+    const copy = createActionButton('Copy', function (button) {
+      navigator.clipboard.writeText(message.text);
+      flashButton(button, 'Copied');
+    });
+
+    const insert = createActionButton('Insert', function (button) {
+      vscode.postMessage({ type: 'insertAnswer', text: message.text });
+      flashButton(button, 'Sent');
+    });
+
+    const replace = createActionButton('Replace Selection', function (button) {
+      vscode.postMessage({ type: 'replaceSelection', text: message.text });
+      flashButton(button, 'Sent');
+    });
+
+    actions.appendChild(copy);
+    actions.appendChild(insert);
+    actions.appendChild(replace);
+
+    return actions;
+  }
+
+  function createActionButton(label, onClick) {
+    const button = document.createElement('button');
+    button.className = 'copy-button';
+    button.type = 'button';
+    button.textContent = label;
+    button.addEventListener('click', function () {
+      onClick(button);
+    });
+    return button;
+  }
+
+  function flashButton(button, text) {
+    const previous = button.textContent;
+    button.textContent = text;
+    setTimeout(function () {
+      button.textContent = previous;
+    }, 1200);
   }
 
   function renderMarkdown(input) {

@@ -2,7 +2,7 @@
   "name": "you-live-chat-vscode",
   "displayName": "You Live Chat",
   "description": "Live chat AI ringan di VS Code menggunakan You.com API.",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "publisher": "local-dev",
   "license": "MIT",
   "repository": {
@@ -30,10 +30,13 @@
   ],
   "activationEvents": [
     "onCommand:youLiveChat.openChat",
+    "onCommand:youLiveChat.setApiKey",
+    "onCommand:youLiveChat.clearApiKey",
     "onCommand:youLiveChat.askSelection",
     "onCommand:youLiveChat.explainFile",
     "onCommand:youLiveChat.fixSelection",
     "onCommand:youLiveChat.checkBugs",
+    "onCommand:youLiveChat.explainProblems",
     "onCommand:youLiveChat.analyzeProject",
     "onCommand:youLiveChat.clearChat"
   ],
@@ -43,6 +46,14 @@
       {
         "command": "youLiveChat.openChat",
         "title": "You Chat: Open Chat"
+      },
+      {
+        "command": "youLiveChat.setApiKey",
+        "title": "You Chat: Set API Key"
+      },
+      {
+        "command": "youLiveChat.clearApiKey",
+        "title": "You Chat: Clear API Key"
       },
       {
         "command": "youLiveChat.askSelection",
@@ -59,6 +70,10 @@
       {
         "command": "youLiveChat.checkBugs",
         "title": "You Chat: Check Code Bugs"
+      },
+      {
+        "command": "youLiveChat.explainProblems",
+        "title": "You Chat: Explain Problems"
       },
       {
         "command": "youLiveChat.analyzeProject",

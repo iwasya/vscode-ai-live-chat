@@ -133,11 +133,22 @@ button:disabled {
   background: transparent;
 }
 
+.message-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+
 .copy-button {
   margin-top: 8px;
   padding: 4px 9px;
   background: var(--vscode-button-secondaryBackground);
   color: var(--vscode-button-secondaryForeground);
+}
+
+.message-actions .copy-button {
+  margin-top: 0;
 }
 
 .copy-button:hover {

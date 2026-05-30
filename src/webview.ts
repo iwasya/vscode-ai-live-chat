@@ -1,19 +1,32 @@
 import * as vscode from 'vscode';
+import { getApiKey } from './secrets';
 import { getSettings } from './settings';
 import { YouClient } from './youClient';
 
 type WebviewMessage =
   | { type: 'sendMessage'; text: string }
-  | { type: 'clearChat' };
+  | { type: 'clearChat' }
+  | { type: 'insertAnswer'; text: string }
+  | { type: 'replaceSelection'; text: string }
+  | { type: 'historyChanged'; messages: ChatMessage[] };
+
+type ChatMessage = {
+  id: string;
+  role: 'user' | 'assistant' | 'error';
+  text: string;
+};
+
+const historyKey = 'youLiveChat.chatHistory';
 
 export class ChatPanel {
   public static currentPanel: ChatPanel | undefined;
 
   private readonly panel: vscode.WebviewPanel;
+  private readonly context: vscode.ExtensionContext;
   private readonly extensionUri: vscode.Uri;
   private disposables: vscode.Disposable[] = [];
 
-  public static createOrShow(extensionUri: vscode.Uri): ChatPanel {
+  public static createOrShow(context: vscode.ExtensionContext): ChatPanel {
     const column = vscode.window.activeTextEditor?.viewColumn ?? vscode.ViewColumn.One;
 
     if (ChatPanel.currentPanel) {
@@ -29,18 +42,19 @@ export class ChatPanel {
         enableScripts: true,
         retainContextWhenHidden: true,
         localResourceRoots: [
-          vscode.Uri.joinPath(extensionUri, 'media')
+          vscode.Uri.joinPath(context.extensionUri, 'media')
         ]
       }
     );
 
-    ChatPanel.currentPanel = new ChatPanel(panel, extensionUri);
+    ChatPanel.currentPanel = new ChatPanel(panel, context);
     return ChatPanel.currentPanel;
   }
 
-  private constructor(panel: vscode.WebviewPanel, extensionUri: vscode.Uri) {
+  private constructor(panel: vscode.WebviewPanel, context: vscode.ExtensionContext) {
     this.panel = panel;
-    this.extensionUri = extensionUri;
+    this.context = context;
+    this.extensionUri = context.extensionUri;
 
     this.panel.webview.html = this.getHtml();
     this.panel.onDidDispose(() => this.dispose(), null, this.disposables);
@@ -62,6 +76,7 @@ export class ChatPanel {
 
   public clear(): void {
     this.panel.webview.postMessage({ type: 'clearChat' });
+    void this.context.workspaceState.update(historyKey, []);
   }
 
   public dispose(): void {
@@ -81,16 +96,32 @@ export class ChatPanel {
 
     if (message.type === 'sendMessage') {
       await this.submitPrompt(message.text);
+      return;
+    }
+
+    if (message.type === 'insertAnswer') {
+      await insertAtCursor(message.text);
+      return;
+    }
+
+    if (message.type === 'replaceSelection') {
+      await replaceSelectionWithAnswer(message.text);
+      return;
+    }
+
+    if (message.type === 'historyChanged') {
+      await this.context.workspaceState.update(historyKey, message.messages.slice(-80));
     }
   }
 
   private async requestAnswer(prompt: string): Promise<void> {
     const settings = getSettings();
+    const apiKey = await getApiKey(this.context);
 
-    if (!settings.apiKey) {
+    if (!apiKey) {
       this.panel.webview.postMessage({
         type: 'error',
-        text: 'API key You.com belum diatur. Buka Settings dan isi youLiveChat.apiKey.'
+        text: 'API key You.com belum diatur. Jalankan command "You Chat: Set API Key".'
       });
       return;
     }
@@ -110,7 +141,7 @@ export class ChatPanel {
     this.panel.webview.postMessage({ type: 'loading', value: true });
 
     try {
-      const client = new YouClient({ apiKey: settings.apiKey });
+      const client = new YouClient({ apiKey });
       const answer = await client.research(localizedPrompt);
       this.panel.webview.postMessage({ type: 'assistantMessage', text: answer });
     } catch (error) {
@@ -126,6 +157,7 @@ export class ChatPanel {
     const scriptUri = webview.asWebviewUri(vscode.Uri.joinPath(this.extensionUri, 'media', 'main.js'));
     const styleUri = webview.asWebviewUri(vscode.Uri.joinPath(this.extensionUri, 'media', 'style.css'));
     const nonce = getNonce();
+    const savedHistory = escapeAttribute(JSON.stringify(this.context.workspaceState.get<ChatMessage[]>(historyKey, [])));
 
     return `<!DOCTYPE html>
 <html lang="id">
@@ -137,6 +169,7 @@ export class ChatPanel {
   <title>You Live Chat</title>
 </head>
 <body>
+  <div id="initialState" data-messages="${savedHistory}" hidden></div>
   <header class="app-header">
     <div>
       <h1>You Live Chat</h1>
@@ -158,6 +191,48 @@ export class ChatPanel {
 </body>
 </html>`;
   }
+}
+
+async function insertAtCursor(text: string): Promise<void> {
+  const editor = vscode.window.activeTextEditor;
+  if (!editor) {
+    vscode.window.showWarningMessage('Tidak ada editor aktif untuk insert jawaban.');
+    return;
+  }
+
+  await editor.edit((builder) => {
+    builder.insert(editor.selection.active, extractBestCode(text));
+  });
+}
+
+async function replaceSelectionWithAnswer(text: string): Promise<void> {
+  const editor = vscode.window.activeTextEditor;
+  if (!editor) {
+    vscode.window.showWarningMessage('Tidak ada editor aktif untuk replace selection.');
+    return;
+  }
+
+  if (editor.selection.isEmpty) {
+    vscode.window.showWarningMessage('Pilih kode dulu sebelum replace selection.');
+    return;
+  }
+
+  await editor.edit((builder) => {
+    builder.replace(editor.selection, extractBestCode(text));
+  });
+}
+
+function extractBestCode(text: string): string {
+  const fenced = text.match(/```(?:[\w.+-]+)?\s*([\s\S]*?)```/);
+  return (fenced?.[1] ?? text).trim();
+}
+
+function escapeAttribute(value: string): string {
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/"/g, '&quot;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
 }
 
 function getNonce(): string {

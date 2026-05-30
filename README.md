@@ -20,20 +20,21 @@ vscode-extension, ai-chat, you-com-api, coding-assistant, bug-checker, typescrip
 
 - Buka panel chat dari Command Palette: `You Chat: Open Chat`
 - Kirim pertanyaan ke You.com API
-- Simpan API key melalui VS Code Settings: `youLiveChat.apiKey`
+- Simpan API key aman melalui SecretStorage: `You Chat: Set API Key`
 - Tanya berdasarkan kode yang dipilih: `You Chat: Ask Selected Code`
 - Jelaskan file aktif: `You Chat: Explain Current File`
 - Perbaiki kode yang dipilih: `You Chat: Fix Selected Code`
 - Cek bug kode terpilih atau file aktif: `You Chat: Check Code Bugs`
+- Jelaskan error/warning dari Problems: `You Chat: Explain Problems`
 - Analisis proyek dan saran perbaikan: `You Chat: Analyze Project and Suggest Improvements`
-- Clear chat dan copy jawaban AI
+- Clear chat, copy jawaban AI, insert jawaban ke editor, dan replace selection dari jawaban AI
 
 ## Menjalankan Lokal
 
 1. Jalankan `npm install`
 2. Jalankan `npm run compile`
 3. Tekan `F5` di VS Code untuk membuka Extension Development Host
-4. Isi setting `youLiveChat.apiKey`
+4. Jalankan command `You Chat: Set API Key`
 5. Jalankan command `You Chat: Open Chat`
 
 ## Install dari VSIX
@@ -47,7 +48,7 @@ npm run package
 Install hasil package:
 
 ```bash
-code --install-extension you-live-chat-vscode-0.1.0.vsix
+code --install-extension you-live-chat-vscode-0.2.0.vsix
 ```
 
 ## Analisis Proyek
@@ -58,6 +59,14 @@ Setting yang bisa diatur:
 
 - `youLiveChat.maxContextChars`: total maksimum karakter konteks
 - `youLiveChat.projectMaxFiles`: jumlah maksimum file proyek yang dibaca
+
+## Editor Actions
+
+Setiap jawaban AI punya tombol:
+
+- `Copy`: salin jawaban
+- `Insert`: masukkan jawaban atau code block utama ke posisi cursor
+- `Replace Selection`: ganti kode yang sedang dipilih dengan code block utama dari jawaban
 
 ## Catatan API
 

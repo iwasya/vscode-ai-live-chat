@@ -1,12 +1,19 @@
 import * as vscode from 'vscode';
 import { getActiveFileText, getProjectContext, getSelectedText } from './contextReader';
+import { clearApiKey, setApiKey } from './secrets';
 import { getSettings } from './settings';
 import { ChatPanel } from './webview';
 
 export function registerCommands(context: vscode.ExtensionContext): void {
   context.subscriptions.push(
     vscode.commands.registerCommand('youLiveChat.openChat', () => {
-      ChatPanel.createOrShow(context.extensionUri);
+      ChatPanel.createOrShow(context);
+    }),
+    vscode.commands.registerCommand('youLiveChat.setApiKey', async () => {
+      await setApiKey(context);
+    }),
+    vscode.commands.registerCommand('youLiveChat.clearApiKey', async () => {
+      await clearApiKey(context);
     }),
     vscode.commands.registerCommand('youLiveChat.askSelection', async () => {
       const selected = getSelectedText();
@@ -30,7 +37,7 @@ export function registerCommands(context: vscode.ExtensionContext): void {
         '```'
       ].join('\n');
 
-      await ChatPanel.createOrShow(context.extensionUri).submitPrompt(prompt, 'Analisis kode yang dipilih');
+      await ChatPanel.createOrShow(context).submitPrompt(prompt, 'Analisis kode yang dipilih');
     }),
     vscode.commands.registerCommand('youLiveChat.explainFile', async () => {
       const settings = getSettings();
@@ -53,7 +60,7 @@ export function registerCommands(context: vscode.ExtensionContext): void {
         '```'
       ].filter(Boolean).join('\n');
 
-      await ChatPanel.createOrShow(context.extensionUri).submitPrompt(prompt, 'Jelaskan file aktif');
+      await ChatPanel.createOrShow(context).submitPrompt(prompt, 'Jelaskan file aktif');
     }),
     vscode.commands.registerCommand('youLiveChat.fixSelection', async () => {
       const selected = getSelectedText();
@@ -76,7 +83,7 @@ export function registerCommands(context: vscode.ExtensionContext): void {
         '```'
       ].join('\n');
 
-      await ChatPanel.createOrShow(context.extensionUri).submitPrompt(prompt, 'Perbaiki kode yang dipilih');
+      await ChatPanel.createOrShow(context).submitPrompt(prompt, 'Perbaiki kode yang dipilih');
     }),
     vscode.commands.registerCommand('youLiveChat.checkBugs', async () => {
       const settings = getSettings();
@@ -109,7 +116,23 @@ export function registerCommands(context: vscode.ExtensionContext): void {
         '```'
       ].filter(Boolean).join('\n');
 
-      await ChatPanel.createOrShow(context.extensionUri).submitPrompt(prompt, selected ? 'Cek bug kode yang dipilih' : 'Cek bug file aktif');
+      await ChatPanel.createOrShow(context).submitPrompt(prompt, selected ? 'Cek bug kode yang dipilih' : 'Cek bug file aktif');
+    }),
+    vscode.commands.registerCommand('youLiveChat.explainProblems', async () => {
+      const diagnostics = collectDiagnostics();
+      if (!diagnostics) {
+        vscode.window.showInformationMessage('Tidak ada error atau warning di Problems untuk workspace/editor aktif.');
+        return;
+      }
+
+      const prompt = [
+        'Jelaskan dan prioritaskan Problems VS Code berikut.',
+        'Berikan penyebab, dampak, dan langkah fix yang konkret. Jika memungkinkan, berikan contoh patch.',
+        '',
+        diagnostics
+      ].join('\n');
+
+      await ChatPanel.createOrShow(context).submitPrompt(prompt, 'Jelaskan Problems VS Code');
     }),
     vscode.commands.registerCommand('youLiveChat.analyzeProject', async () => {
       const settings = getSettings();
@@ -151,10 +174,32 @@ export function registerCommands(context: vscode.ExtensionContext): void {
         projectSnapshot
       ].filter(Boolean).join('\n');
 
-      await ChatPanel.createOrShow(context.extensionUri).submitPrompt(prompt, 'Analisis proyek dan saran perbaikan');
+      await ChatPanel.createOrShow(context).submitPrompt(prompt, 'Analisis proyek dan saran perbaikan');
     }),
     vscode.commands.registerCommand('youLiveChat.clearChat', () => {
       ChatPanel.currentPanel?.clear();
     })
   );
+}
+
+function collectDiagnostics(): string | undefined {
+  const activeUri = vscode.window.activeTextEditor?.document.uri;
+  const entries = activeUri
+    ? [[activeUri, vscode.languages.getDiagnostics(activeUri)] as const]
+    : vscode.languages.getDiagnostics();
+
+  const lines = entries.flatMap(([uri, diagnostics]) => {
+    return diagnostics
+      .filter((diagnostic) => diagnostic.severity <= vscode.DiagnosticSeverity.Warning)
+      .slice(0, 25)
+      .map((diagnostic) => {
+        const severity = diagnostic.severity === vscode.DiagnosticSeverity.Error ? 'Error' : 'Warning';
+        const line = diagnostic.range.start.line + 1;
+        const character = diagnostic.range.start.character + 1;
+        const source = diagnostic.source ? ` [${diagnostic.source}]` : '';
+        return `- ${severity}${source} ${vscode.workspace.asRelativePath(uri, false)}:${line}:${character} ${diagnostic.message}`;
+      });
+  });
+
+  return lines.length ? lines.join('\n') : undefined;
 }
