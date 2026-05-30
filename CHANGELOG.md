@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.2.11 - 2026-05-30
+
+- Send chat input with Enter.
+- Keep Shift+Enter for multiline input.
+
 ## 0.2.10 - 2026-05-30
 
 - Make default chat responses shorter and more natural.

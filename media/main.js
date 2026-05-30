@@ -66,6 +66,12 @@
       }
     }
 
+    if (event.key === 'Enter' && !event.shiftKey) {
+      event.preventDefault();
+      sendPrompt();
+      return;
+    }
+
     if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') {
       event.preventDefault();
       sendPrompt();
