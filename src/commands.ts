@@ -7,6 +7,7 @@ import { ChatPanel } from './webview';
 export function registerCommands(context: vscode.ExtensionContext): void {
   context.subscriptions.push(
     vscode.commands.registerCommand('youLiveChat.openChat', async () => {
+      await vscode.commands.executeCommand('workbench.action.moveSideBarRight');
       await ChatPanel.createOrShow(context);
     }),
     vscode.commands.registerCommand('youLiveChat.setApiKey', async () => {

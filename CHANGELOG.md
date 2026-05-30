@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.2.7 - 2026-05-30
+
+- Default VS Code sidebar location to the right for an assistant-style layout.
+- Move sidebar to the right when running `You Chat: Open Chat`.
+
 ## 0.2.6 - 2026-05-30
 
 - Add slash command autocomplete menu when typing `/` in the chat input.
