@@ -2,7 +2,7 @@
   "name": "you-live-chat-vscode",
   "displayName": "You Live Chat",
   "description": "Live chat AI ringan di VS Code menggunakan You.com atau provider OpenAI-compatible.",
-  "version": "0.2.12",
+  "version": "0.2.13",
   "publisher": "R4ten99",
   "icon": "assets/icon.png",
   "license": "MIT",
