@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { getActiveFileText, getProjectContext, getSelectedText } from './contextReader';
-import { getApiKey } from './secrets';
+import { getApiConnection } from './secrets';
 import { getSettings } from './settings';
 import { YouClient } from './youClient';
 
@@ -124,13 +124,21 @@ export class ChatPanel implements vscode.WebviewViewProvider {
 
   private async requestAnswer(prompt: string, includeWorkspace: boolean): Promise<void> {
     const settings = getSettings();
-    const apiKey = await getApiKey(this.context);
+    const apiConnection = await getApiConnection(this.context);
     const shouldAttachWorkspace = includeWorkspace && !isCasualShortInput(prompt);
 
-    if (!apiKey) {
+    if (!apiConnection.apiKey) {
       this.postMessage({
         type: 'error',
-        text: 'API key You.com belum diatur. Jalankan command "You Chat: Set API Key".'
+        text: 'API key belum diatur. Jalankan command "You Chat: Set API Key".'
+      });
+      return;
+    }
+
+    if (!apiConnection.apiBaseUrl || !apiConnection.model) {
+      this.postMessage({
+        type: 'error',
+        text: 'Base URL atau model belum diatur. Jalankan command "You Chat: Set API Provider".'
       });
       return;
     }
@@ -158,7 +166,7 @@ export class ChatPanel implements vscode.WebviewViewProvider {
     ].join('\n');
 
     try {
-      const client = new YouClient({ apiKey });
+      const client = new YouClient(apiConnection);
       const answer = await client.research(localizedPrompt);
       this.postMessage({ type: 'assistantMessage', text: answer });
     } catch (error) {
@@ -193,6 +201,12 @@ export class ChatPanel implements vscode.WebviewViewProvider {
     if (command === '/key') {
       await vscode.commands.executeCommand('youLiveChat.setApiKey');
       this.postLocalAssistant('API key flow dibuka. Setelah selesai, kamu bisa lanjut chat dari sini.');
+      return;
+    }
+
+    if (command === '/provider') {
+      await vscode.commands.executeCommand('youLiveChat.setApiProvider');
+      this.postLocalAssistant('Provider flow dibuka. Isi base URL, model, dan API key sesuai provider yang mau dipakai.');
       return;
     }
 
@@ -295,7 +309,7 @@ export class ChatPanel implements vscode.WebviewViewProvider {
   <header class="app-header">
     <div>
       <h1>You Live Chat</h1>
-      <p>Mode: Research</p>
+      <p>Mode: AI Provider</p>
     </div>
     <button id="clearButton" class="icon-button" title="Clear chat" aria-label="Clear chat">Clear</button>
   </header>
@@ -384,14 +398,16 @@ function getSlashHelp(): string {
     '- `/file [instruksi]` baca dan jelaskan file aktif.',
     '- `/project` analisis proyek dan beri saran perbaikan.',
     '- `/problems` jelaskan error/warning dari Problems.',
-    '- `/key` simpan API key You.com.',
+    '- `/provider` set base URL, model, dan API key provider AI.',
+    '- `/key` simpan API key.',
     '- `/clear` hapus chat.',
     '- `/you` atau `/help` tampilkan bantuan ini.',
     '',
     'Contoh:',
     '`/fix bikin kode ini lebih aman`',
     '`/bugs cari edge case di function ini`',
-    '`/file jelaskan struktur file ini`'
+    '`/file jelaskan struktur file ini`',
+    '`/provider`'
   ].join('\n');
 }
 

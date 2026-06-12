@@ -1,7 +1,7 @@
 {
   "name": "you-live-chat-vscode",
   "displayName": "You Live Chat",
-  "description": "Live chat AI ringan di VS Code menggunakan You.com API.",
+  "description": "Live chat AI ringan di VS Code menggunakan You.com atau provider OpenAI-compatible.",
   "version": "0.2.12",
   "publisher": "R4ten99",
   "icon": "assets/icon.png",
@@ -33,7 +33,11 @@
     "onView:youLiveChat.chatView",
     "onCommand:youLiveChat.openChat",
     "onCommand:youLiveChat.setApiKey",
+    "onCommand:youLiveChat.setApiProvider",
+    "onCommand:youLiveChat.setApiBaseUrl",
+    "onCommand:youLiveChat.setModel",
     "onCommand:youLiveChat.clearApiKey",
+    "onCommand:youLiveChat.clearApiProvider",
     "onCommand:youLiveChat.askSelection",
     "onCommand:youLiveChat.explainFile",
     "onCommand:youLiveChat.fixSelection",
@@ -72,8 +76,24 @@
         "title": "You Chat: Set API Key"
       },
       {
+        "command": "youLiveChat.setApiProvider",
+        "title": "You Chat: Set API Provider"
+      },
+      {
+        "command": "youLiveChat.setApiBaseUrl",
+        "title": "You Chat: Set API Base URL"
+      },
+      {
+        "command": "youLiveChat.setModel",
+        "title": "You Chat: Set AI Model"
+      },
+      {
         "command": "youLiveChat.clearApiKey",
         "title": "You Chat: Clear API Key"
+      },
+      {
+        "command": "youLiveChat.clearApiProvider",
+        "title": "You Chat: Clear API Provider"
       },
       {
         "command": "youLiveChat.askSelection",
@@ -110,7 +130,17 @@
         "youLiveChat.apiKey": {
           "type": "string",
           "default": "",
-          "markdownDescription": "API key You.com. Untuk MVP disimpan di VS Code Settings."
+          "markdownDescription": "API key provider AI. Lebih aman memakai command `You Chat: Set API Key` agar tersimpan di VS Code SecretStorage."
+        },
+        "youLiveChat.apiBaseUrl": {
+          "type": "string",
+          "default": "https://api.you.com/v1/research",
+          "markdownDescription": "Base URL provider AI. Untuk provider OpenAI-compatible gunakan base URL seperti `https://api.openai.com/v1`, `https://openrouter.ai/api/v1`, atau full endpoint `/chat/completions`. You.com Research tetap didukung dengan `https://api.you.com/v1/research`."
+        },
+        "youLiveChat.model": {
+          "type": "string",
+          "default": "research",
+          "markdownDescription": "Nama model yang dikirim ke provider OpenAI-compatible, misalnya `gpt-4o-mini`, `openai/gpt-4o-mini`, `deepseek-chat`, atau `llama-3.3-70b-versatile`. Untuk You.com Research biarkan `research`."
         },
         "youLiveChat.defaultMode": {
           "type": "string",

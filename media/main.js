@@ -18,7 +18,8 @@
     { command: '/file', detail: 'Baca dan jelaskan file aktif' },
     { command: '/project', detail: 'Analisis proyek dan saran perbaikan' },
     { command: '/problems', detail: 'Jelaskan error/warning dari Problems' },
-    { command: '/key', detail: 'Simpan API key You.com' },
+    { command: '/provider', detail: 'Set base URL, model, dan API key' },
+    { command: '/key', detail: 'Simpan API key provider AI' },
     { command: '/clear', detail: 'Hapus chat saat ini' },
     { command: '/help', detail: 'Tampilkan bantuan slash command' }
   ];
@@ -156,7 +157,7 @@
     if (state.messages.length === 0) {
       const empty = document.createElement('section');
       empty.className = 'empty-state';
-      empty.textContent = 'Mulai chat dengan You.com API langsung dari VS Code. Ketik /you untuk command cepat.';
+      empty.textContent = 'Mulai chat dengan provider AI langsung dari VS Code. Ketik /provider untuk setup atau /you untuk command cepat.';
       chat.appendChild(empty);
       return;
     }

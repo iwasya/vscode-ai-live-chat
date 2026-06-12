@@ -1,6 +1,6 @@
 import * as vscode from 'vscode';
 import { getActiveFileText, getProjectContext, getSelectedText } from './contextReader';
-import { clearApiKey, setApiKey } from './secrets';
+import { clearApiConnection, clearApiKey, setApiBaseUrl, setApiConnection, setApiKey, setModel } from './secrets';
 import { getSettings } from './settings';
 import { ChatPanel } from './webview';
 
@@ -12,8 +12,20 @@ export function registerCommands(context: vscode.ExtensionContext): void {
     vscode.commands.registerCommand('youLiveChat.setApiKey', async () => {
       await setApiKey(context);
     }),
+    vscode.commands.registerCommand('youLiveChat.setApiProvider', async () => {
+      await setApiConnection(context);
+    }),
+    vscode.commands.registerCommand('youLiveChat.setApiBaseUrl', async () => {
+      await setApiBaseUrl(context);
+    }),
+    vscode.commands.registerCommand('youLiveChat.setModel', async () => {
+      await setModel(context);
+    }),
     vscode.commands.registerCommand('youLiveChat.clearApiKey', async () => {
       await clearApiKey(context);
+    }),
+    vscode.commands.registerCommand('youLiveChat.clearApiProvider', async () => {
+      await clearApiConnection(context);
     }),
     vscode.commands.registerCommand('youLiveChat.askSelection', async () => {
       const selected = getSelectedText();

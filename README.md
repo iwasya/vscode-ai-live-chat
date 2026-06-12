@@ -5,7 +5,7 @@
 <h1 align="center">You Live Chat for VS Code</h1>
 
 <p align="center">
-  Live chat AI ringan di VS Code menggunakan You.com API.
+  Live chat AI ringan di VS Code menggunakan You.com atau provider OpenAI-compatible.
 </p>
 
 <p align="center">
@@ -14,27 +14,28 @@
   <img alt="License" src="https://img.shields.io/badge/license-MIT-green">
 </p>
 
-Extension VS Code untuk live chat AI ringan menggunakan You.com Research API.
+Extension VS Code untuk live chat AI ringan menggunakan You.com Research API atau provider OpenAI-compatible.
 
 ## GitHub About
 
 Description:
 
 ```text
-VS Code AI live chat extension powered by You.com API, with selected code analysis, bug checking, and project improvement suggestions.
+VS Code AI live chat extension powered by You.com or OpenAI-compatible APIs, with selected code analysis, bug checking, and project improvement suggestions.
 ```
 
 Topics:
 
 ```text
-vscode-extension, ai-chat, you-com-api, coding-assistant, bug-checker, typescript
+vscode-extension, ai-chat, you-com-api, openai-compatible, coding-assistant, bug-checker, typescript
 ```
 
 ## Fitur MVP
 
 - Buka panel chat dari Command Palette: `You Chat: Open Chat`
-- Kirim pertanyaan ke You.com API
+- Kirim pertanyaan ke You.com API atau provider OpenAI-compatible
 - Simpan API key aman melalui SecretStorage: `You Chat: Set API Key`
+- Set provider lengkap melalui SecretStorage: `You Chat: Set API Provider`
 - Tanya berdasarkan kode yang dipilih: `You Chat: Ask Selected Code`
 - Jelaskan file aktif: `You Chat: Explain Current File`
 - Perbaiki kode yang dipilih: `You Chat: Fix Selected Code`
@@ -43,7 +44,7 @@ vscode-extension, ai-chat, you-com-api, coding-assistant, bug-checker, typescrip
 - Analisis proyek dan saran perbaikan: `You Chat: Analyze Project and Suggest Improvements`
 - Clear chat, copy jawaban AI, insert jawaban ke editor, dan replace selection dari jawaban AI
 - Toggle `Use Workspace` di chat untuk melampirkan konteks file aktif dan snapshot proyek ke pertanyaan biasa
-- Slash command langsung dari input chat: `/you`, `/ask`, `/fix`, `/bugs`, `/file`, `/project`, `/problems`, `/key`, `/clear`
+- Slash command langsung dari input chat: `/you`, `/ask`, `/fix`, `/bugs`, `/file`, `/project`, `/problems`, `/provider`, `/key`, `/clear`
 - Ketik `/` di input chat untuk melihat autocomplete command
 ## Slash Commands
 
@@ -56,6 +57,7 @@ Ketik command berikut langsung di input chat:
 - `/file [instruksi]`: baca file aktif
 - `/project`: analisis proyek
 - `/problems`: jelaskan Problems VS Code
+- `/provider`: set base URL, model, dan API key provider AI
 - `/key`: simpan API key
 - `/clear`: hapus chat
 
@@ -64,7 +66,7 @@ Ketik command berikut langsung di input chat:
 1. Jalankan `npm install`
 2. Jalankan `npm run compile`
 3. Tekan `F5` di VS Code untuk membuka Extension Development Host
-4. Jalankan command `You Chat: Set API Key`
+4. Jalankan command `You Chat: Set API Provider`
 5. Jalankan command `You Chat: Open Chat`
 
 ## Install dari VSIX
@@ -104,6 +106,8 @@ Setting yang bisa diatur:
 
 - `youLiveChat.maxContextChars`: total maksimum karakter konteks
 - `youLiveChat.projectMaxFiles`: jumlah maksimum file proyek yang dibaca
+- `youLiveChat.apiBaseUrl`: base URL provider AI
+- `youLiveChat.model`: nama model provider AI
 
 ## Editor Actions
 
@@ -113,9 +117,9 @@ Setiap jawaban AI punya tombol:
 - `Insert`: masukkan jawaban atau code block utama ke posisi cursor
 - `Replace Selection`: ganti kode yang sedang dipilih dengan code block utama dari jawaban
 
-## Catatan API
+## Catatan API Provider
 
-MVP ini memakai You.com Research API:
+Default extension tetap memakai You.com Research API:
 
 ```text
 POST https://api.you.com/v1/research
@@ -123,4 +127,20 @@ Header: X-API-Key
 Body: { "input": "...", "research_effort": "standard" }
 ```
 
-Jika format response API berubah, update parsing di `src/youClient.ts`.
+Untuk provider lain, isi `You Chat: Set API Provider` dengan base URL, model, dan API key. Provider OpenAI-compatible akan dipanggil dengan format:
+
+```text
+POST {baseUrl}/chat/completions
+Header: Authorization: Bearer {apiKey}
+Body: { "model": "...", "messages": [{ "role": "user", "content": "..." }], "stream": false }
+```
+
+Contoh base URL:
+
+- OpenAI: `https://api.openai.com/v1`
+- OpenRouter: `https://openrouter.ai/api/v1`
+- Groq: `https://api.groq.com/openai/v1`
+- DeepSeek: `https://api.deepseek.com`
+- LM Studio lokal: `http://localhost:1234/v1`
+
+Jika provider memakai format non-OpenAI-compatible, perlu adapter atau update parsing/request di `src/youClient.ts`.
